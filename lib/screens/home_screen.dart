@@ -255,8 +255,8 @@ class ListTileWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: screenWidth * 0.16,
-            height: screenHeight * 0.08,
+            width: 50,
+            height: 50,
             decoration: BoxDecoration(
               color:
                   HomeScreen.moneys[index].isReceived ? kGreenColor : kRedColor,
@@ -327,6 +327,7 @@ class EmptyWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        const Spacer(),
         Container(
           alignment: Alignment.center,
           child: SvgPicture.asset('assets/images/empty.svg'),

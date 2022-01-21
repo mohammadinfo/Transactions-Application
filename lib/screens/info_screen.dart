@@ -116,86 +116,88 @@ class _InfoScreenState extends State<InfoScreen> {
               ),
               Column(
                 children: [
-                  //! Today
-                  Container(
-                    margin: const EdgeInsets.only(
-                        right: 15.0, top: 20.0, left: 5.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        Text(pTodayMoneys.toString(),
-                            textAlign: TextAlign.left),
-                        const Text(
-                          ' : پرداختی امروز',
-                          textAlign: TextAlign.right,
-                        ),
-                        Text(dTodayMoneys.toString(),
-                            textAlign: TextAlign.left),
-                        const Text(
-                          ' : دریافتی امروز',
-                          textAlign: TextAlign.right,
-                        ),
-                      ],
-                    ),
+                  MoneyInfoWidget(
+                    firstText: ':دریافتی امروز',
+                    firstPrice: dTodayMoneys,
+                    secondText: ':پرداختی امروز',
+                    secondPrice: pTodayMoneys,
                   ),
-                  //! This Month
-                  Container(
-                    margin: const EdgeInsets.only(
-                        right: 15.0, top: 20.0, left: 5.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        Text(pCurrentMonthMoneys.toString(),
-                            textAlign: TextAlign.left),
-                        const Text(
-                          ' : پرداختی این ماه',
-                          textAlign: TextAlign.right,
-                        ),
-                        Text(dCurrentMonthMoneys.toString(),
-                            textAlign: TextAlign.left),
-                        const Text(
-                          ' : دریافتی این ماه',
-                          textAlign: TextAlign.right,
-                        ),
-                      ],
-                    ),
+                  MoneyInfoWidget(
+                    firstText: ':دریافتی این ماه',
+                    firstPrice: dCurrentMonthMoneys,
+                    secondText: ':پرداختی این ماه',
+                    secondPrice: pCurrentMonthMoneys,
                   ),
-                  //! This Year
-                  Container(
-                    margin: const EdgeInsets.only(
-                        right: 15.0, top: 20.0, left: 5.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        Text(pCurrentYear.toString(),
-                            textAlign: TextAlign.left),
-                        const Text(
-                          ' : پرداختی این سال',
-                          textAlign: TextAlign.right,
-                        ),
-                        Text(dCurrentYear.toString(),
-                            textAlign: TextAlign.left),
-                        const Text(
-                          ' : دریافتی این سال',
-                          textAlign: TextAlign.right,
-                        ),
-                      ],
-                    ),
+                  MoneyInfoWidget(
+                    firstText: ':دریافتی این سال',
+                    firstPrice: dCurrentYear,
+                    secondText: ':پرداختی این سال',
+                    secondPrice: pCurrentYear,
                   ),
                   //! Chart
-                  Container(
-                    margin: const EdgeInsets.all(30.0),
-                    height: 200,
-                    child: BarChartWidget(
-                      dYear: dCurrentYear,
-                      pYear: pCurrentYear,
-                    ),
-                  ),
+                  pCurrentYear == 0 || dCurrentYear == 0
+                      ? Container()
+                      : Container(
+                          margin: const EdgeInsets.all(30.0),
+                          height: 200,
+                          child: BarChartWidget(
+                            dYear: dCurrentYear,
+                            pYear: pCurrentYear,
+                          ),
+                        ),
                 ],
               )
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class MoneyInfoWidget extends StatelessWidget {
+  final String firstText;
+  final String secondText;
+  final double firstPrice;
+  final double secondPrice;
+
+  const MoneyInfoWidget({
+    Key? key,
+    required this.firstText,
+    required this.secondText,
+    required this.firstPrice,
+    required this.secondPrice,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(right: 15.0, top: 20.0, left: 15.0),
+      child: Row(
+        children: [
+          Text(
+            secondPrice.toString(),
+            textAlign: TextAlign.right,
+          ),
+          Expanded(
+            child: Text(
+              secondText,
+              textAlign: TextAlign.right,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              firstPrice.toString(),
+              textAlign: TextAlign.right,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              firstText,
+              textAlign: TextAlign.right,
+            ),
+          ),
+        ],
       ),
     );
   }
