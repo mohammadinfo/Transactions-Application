@@ -186,6 +186,7 @@ class _HomeScreenState extends State<HomeScreen> {
           isTyped == false
               ? Expanded(
                   child: SearchBarAnimation(
+                    hintText: '...جستجو کنید',
                     buttonElevation: 0,
                     buttonShadowColour: Colors.black26,
                     isOriginalAnimation: false,

@@ -37,13 +37,21 @@ class _InfoScreenState extends State<InfoScreen> {
     pCurrentYear = 0;
     dCurrentYear = 0;
 
+    String year = Jalali.now().year.toString();
+
+    String month = Jalali.now().month.toString().length == 1
+        ? '0${Jalali.now().month.toString()}'
+        : Jalali.now().month.toString();
+
+    String day = Jalali.now().day.toString().length == 1
+        ? '0${Jalali.now().day.toString()}'
+        : Jalali.now().day.toString();
+
+    String today = year + '/' + month + '/' + day;
+
     //! Today
-    String today = Jalali.now().year.toString() +
-        '/' +
-        Jalali.now().month.toString() +
-        '/' +
-        Jalali.now().day.toString();
     // P
+
     for (var value in hiveBox.values) {
       if (value.date == today && value.isReceived == false) {
         setState(() {
@@ -60,7 +68,6 @@ class _InfoScreenState extends State<InfoScreen> {
       }
     }
     //! This Month
-    String month = Jalali.now().month.toString();
     // P
     for (var value in hiveBox.values) {
       if (value.date.substring(5, 7) == month && value.isReceived == false) {
@@ -79,7 +86,6 @@ class _InfoScreenState extends State<InfoScreen> {
     }
 
     //! This Year
-    String year = Jalali.now().year.toString();
     // P
     for (var value in hiveBox.values) {
       if (value.date.substring(0, 4) == year && value.isReceived == false) {
@@ -175,9 +181,11 @@ class MoneyInfoWidget extends StatelessWidget {
       margin: const EdgeInsets.only(right: 15.0, top: 20.0, left: 15.0),
       child: Row(
         children: [
-          Text(
-            secondPrice.toString(),
-            textAlign: TextAlign.right,
+          Expanded(
+            child: Text(
+              secondPrice.toString(),
+              textAlign: TextAlign.right,
+            ),
           ),
           Expanded(
             child: Text(
