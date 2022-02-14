@@ -1,49 +1,91 @@
-// ignore_for_file: prefer_const_constructors_in_immutables, use_key_in_widget_constructors, must_be_immutable
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:money_app/constant.dart';
-import 'package:money_app/main.dart';
-import 'package:money_app/models/money.dart';
+import 'package:money_app/utils/extension.dart';
+import '../constant.dart';
+import '../main.dart';
+import '../models/money.dart';
 import 'package:persian_datetime_picker/persian_datetime_picker.dart';
 
-class NewTransactionScreen extends StatefulWidget {
-  //
+class NewTransactionsScreen extends StatefulWidget {
+  const NewTransactionsScreen({Key? key}) : super(key: key);
+  static int groupId = 0;
   static TextEditingController descriptionController = TextEditingController();
   static TextEditingController priceController = TextEditingController();
-  static String date = '';
-  static int groupValue = 0;
-  static bool isEdit = false;
+  static bool isEditing = false;
   static int id = 0;
-  //
-  NewTransactionScreen({Key? key}) : super(key: key);
-
+  static String date = 'تاریخ';
   @override
-  State<NewTransactionScreen> createState() => _NewTransactionScreenState();
+  _NewTransactionsScreenState createState() => _NewTransactionsScreenState();
 }
 
-class _NewTransactionScreenState extends State<NewTransactionScreen> {
+class _NewTransactionsScreenState extends State<NewTransactionsScreen> {
+  Box<Money> hiveBox = Hive.box<Money>('moneyBox');
   @override
   Widget build(BuildContext context) {
-    //
-    double screenWidth = MediaQuery.of(context).size.width;
-    double screenHeight = MediaQuery.of(context).size.height;
-    //
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Container(
-          width: screenWidth,
-          margin: const EdgeInsets.all(20.0),
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: Container(
+          width: double.infinity,
+          margin: const EdgeInsets.all(15.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              TextWidget(screenHeight: screenHeight),
-              const DescriptionWidget(),
-              const PriceWidget(),
+              Text(
+                NewTransactionsScreen.isEditing
+                    ? 'ویرایش تراکنش'
+                    : 'تراکنش جدید',
+                style: TextStyle(
+                    fontSize: ScreenSize(context).screenWidth < 1004
+                        ? 14
+                        : ScreenSize(context).screenWidth * 0.015),
+              ),
+              MyTextField(
+                hintText: 'توضیحات',
+                controller: NewTransactionsScreen.descriptionController,
+              ),
+              MyTextField(
+                hintText: 'مبلغ',
+                type: TextInputType.number,
+                controller: NewTransactionsScreen.priceController,
+              ),
+              const SizedBox(height: 20),
               const TypeAndDateWidget(),
-              const SizedBox(height: 10.0),
-              ButtonWidget(screenWidth: screenWidth)
+              const SizedBox(height: 20),
+              MyButton(
+                text: NewTransactionsScreen.isEditing
+                    ? 'ویرایش کردن'
+                    : 'اضافه کردن',
+                onPressed: () {
+                  //
+                  Money item = Money(
+                    id: Random().nextInt(99999999),
+                    title: NewTransactionsScreen.descriptionController.text,
+                    price: NewTransactionsScreen.priceController.text,
+                    date: NewTransactionsScreen.date,
+                    isReceived:
+                        NewTransactionsScreen.groupId == 1 ? true : false,
+                  );
+                  //
+                  if (NewTransactionsScreen.isEditing) {
+                    int index = 0;
+                    MyApp.getData();
+                    for (int i = 0; i < hiveBox.values.length; i++) {
+                      if (hiveBox.values.elementAt(i).id ==
+                          NewTransactionsScreen.id) {
+                        index = i;
+                      }
+                    }
+
+                    hiveBox.putAt(index, item);
+                  } else {
+                    //HomeScreen.moneys.add(item);
+                    hiveBox.add(item);
+                  }
+                  Navigator.pop(context);
+                },
+              )
             ],
           ),
         ),
@@ -52,63 +94,35 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
   }
 }
 
-//*
-class ButtonWidget extends StatelessWidget {
-  const ButtonWidget({
-    Key? key,
-    required this.screenWidth,
-  }) : super(key: key);
-
-  final double screenWidth;
+//! MyButton
+class MyButton extends StatelessWidget {
+  final String text;
+  final Function() onPressed;
+  const MyButton({Key? key, required this.text, required this.onPressed})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    Box<Money> hiveBox = Hive.box<Money>('moneyBox');
     return SizedBox(
-      width: screenWidth,
-      height: 40.0,
+      width: double.infinity,
+      height: 50,
       child: ElevatedButton(
         style: TextButton.styleFrom(
-          elevation: 0,
           backgroundColor: kPurpleColor,
+          elevation: 0,
         ),
-        onPressed: () {
-          //
-          Money money = Money(
-            id: NewTransactionScreen.id == 0
-                ? Random().nextInt(99999999)
-                : NewTransactionScreen.id,
-            title: NewTransactionScreen.descriptionController.text,
-            price: NewTransactionScreen.priceController.text,
-            date: NewTransactionScreen.date,
-            isReceived: NewTransactionScreen.groupValue == 1,
-          );
-          MyApp.refreshList();
-          int finalIndex = 0000;
-          for (int i = 0; i < hiveBox.values.length; i++) {
-            if (hiveBox.values.elementAt(i).id == NewTransactionScreen.id) {
-              finalIndex = i;
-            }
-          }
-          //
-          if (NewTransactionScreen.isEdit) {
-            hiveBox.putAt(finalIndex, money);
-          } else {
-            hiveBox.add(money);
-          }
-
-          //
-          Navigator.pop(context);
-        },
-        child: Text(NewTransactionScreen.isEdit ? 'ویرایش کردن' : 'اضافه کردن'),
+        onPressed: onPressed,
+        child: Text(text),
       ),
     );
   }
 }
 
-//*
+//! Type And Date Widget
 class TypeAndDateWidget extends StatefulWidget {
-  const TypeAndDateWidget({Key? key}) : super(key: key);
+  const TypeAndDateWidget({
+    Key? key,
+  }) : super(key: key);
 
   @override
   State<TypeAndDateWidget> createState() => _TypeAndDateWidgetState();
@@ -121,70 +135,65 @@ class _TypeAndDateWidgetState extends State<TypeAndDateWidget> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Expanded(
-          child: RadioListTile(
-            activeColor: kPurpleColor,
-            visualDensity: VisualDensity.comfortable,
-            contentPadding: EdgeInsets.zero,
-            title: const Text(
-              'دریافتی',
-              style: TextStyle(fontSize: 14.0),
-            ),
+          child: MyRadioButton(
             value: 1,
-            groupValue: NewTransactionScreen.groupValue,
-            onChanged: (int? value) {
+            groupValue: NewTransactionsScreen.groupId,
+            onChanged: (value) {
               setState(() {
-                NewTransactionScreen.groupValue = value!;
+                NewTransactionsScreen.groupId = value!;
               });
             },
-          ),
-        ),
-        Expanded(
-          child: RadioListTile(
-            activeColor: kPurpleColor,
-            contentPadding: EdgeInsets.zero,
-            visualDensity: VisualDensity.comfortable,
-            title: const Text(
-              'پرداختی',
-              style: TextStyle(fontSize: 14.0),
-            ),
-            value: 2,
-            groupValue: NewTransactionScreen.groupValue,
-            onChanged: (int? value) {
-              setState(() {
-                NewTransactionScreen.groupValue = value!;
-              });
-            },
+            text: 'دریافتی',
           ),
         ),
         const SizedBox(width: 10),
         Expanded(
-          child: OutlinedButton(
-            onPressed: () async {
-              var picked = await showPersianDatePicker(
-                context: context,
-                initialDate: Jalali.now(),
-                firstDate: Jalali(1400),
-                lastDate: Jalali(1499),
-              );
+          child: MyRadioButton(
+            value: 2,
+            groupValue: NewTransactionsScreen.groupId,
+            onChanged: (value) {
               setState(() {
-                String year = picked!.year.toString();
-
-                String month = picked.month.toString().length == 1
-                    ? '0${picked.month.toString()}'
-                    : picked.month.toString();
-
-                String day = picked.day.toString().length == 1
-                    ? '0${picked.day.toString()}'
-                    : picked.day.toString();
-
-                NewTransactionScreen.date = year + '/' + month + '/' + day;
+                NewTransactionsScreen.groupId = value!;
               });
             },
-            child: Text(
-              NewTransactionScreen.date == ''
-                  ? 'تاریخ'
-                  : NewTransactionScreen.date,
-              style: const TextStyle(color: Colors.black, fontSize: 12),
+            text: 'پرداختی',
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: SizedBox(
+            height: 50,
+            child: OutlinedButton(
+              onPressed: () async {
+                var pickedDate = await showPersianDatePicker(
+                  context: context,
+                  initialDate: Jalali.now(),
+                  firstDate: Jalali(1400),
+                  lastDate: Jalali(1499),
+                );
+                setState(() {
+                  String year = pickedDate!.year.toString();
+                  //
+                  String month = pickedDate.month.toString().length == 1
+                      ? '0${pickedDate.month.toString()}'
+                      : pickedDate.month.toString();
+                  //
+                  String day = pickedDate.day.toString().length == 1
+                      ? '0${pickedDate.day.toString()}'
+                      : pickedDate.day.toString();
+                  //
+                  NewTransactionsScreen.date = year + '/' + month + '/' + day;
+                });
+              },
+              child: Text(
+                NewTransactionsScreen.date,
+                style: TextStyle(
+                  fontSize: ScreenSize(context).screenWidth < 1004
+                      ? 14
+                      : ScreenSize(context).screenWidth * 0.01,
+                  color: Colors.black,
+                ),
+              ),
             ),
           ),
         ),
@@ -193,71 +202,65 @@ class _TypeAndDateWidgetState extends State<TypeAndDateWidget> {
   }
 }
 
-//*
-class PriceWidget extends StatelessWidget {
-  const PriceWidget({
-    Key? key,
-  }) : super(key: key);
+//! My Radio Button
+class MyRadioButton extends StatelessWidget {
+  final int value;
+  final int groupValue;
+  final Function(int?) onChanged;
+  final String text;
+
+  const MyRadioButton(
+      {Key? key,
+      required this.value,
+      required this.groupValue,
+      required this.onChanged,
+      required this.text})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return MyTextField(
-      controller: NewTransactionScreen.priceController,
-      hintText: 'مبلغ',
-      type: TextInputType.number,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Expanded(
+          child: Radio(
+            activeColor: kPurpleColor,
+            value: value,
+            groupValue: groupValue,
+            onChanged: onChanged,
+          ),
+        ),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+                fontSize: ScreenSize(context).screenWidth < 1004
+                    ? 14
+                    : ScreenSize(context).screenWidth * 0.01),
+          ),
+        ),
+      ],
     );
   }
 }
 
-//*
-class DescriptionWidget extends StatelessWidget {
-  const DescriptionWidget({
-    Key? key,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return MyTextField(
-      controller: NewTransactionScreen.descriptionController,
-      hintText: 'توضیحات',
-      type: TextInputType.text,
-    );
-  }
-}
-
-//*
-class TextWidget extends StatelessWidget {
-  const TextWidget({
-    Key? key,
-    required this.screenHeight,
-  }) : super(key: key);
-
-  final double screenHeight;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      NewTransactionScreen.isEdit ? 'ویرایش تراکنش' : 'تراکنش جدید',
-      style: TextStyle(fontSize: screenHeight * 0.025),
-    );
-  }
-}
-
-//*
+//! My TextField
 class MyTextField extends StatelessWidget {
-  final TextEditingController controller;
   final String hintText;
   final TextInputType type;
-  MyTextField({
+  final TextEditingController controller;
+  const MyTextField({
+    Key? key,
     required this.controller,
     required this.hintText,
-    required this.type,
-  });
+    this.type = TextInputType.text,
+  }) : super(key: key);
   @override
   Widget build(BuildContext context) {
     return TextField(
       controller: controller,
       keyboardType: type,
+      cursorColor: Colors.black38,
       decoration: InputDecoration(
         border: UnderlineInputBorder(
           borderSide: BorderSide(color: Colors.grey.shade300),
@@ -269,6 +272,10 @@ class MyTextField extends StatelessWidget {
           borderSide: BorderSide(color: Colors.grey.shade300),
         ),
         hintText: hintText,
+        hintStyle: TextStyle(
+            fontSize: ScreenSize(context).screenWidth < 1004
+                ? 14
+                : ScreenSize(context).screenWidth * 0.012),
       ),
     );
   }

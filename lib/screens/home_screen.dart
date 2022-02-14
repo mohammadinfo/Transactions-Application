@@ -1,139 +1,125 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:money_app/main.dart';
-import 'package:searchbar_animation/searchbar_animation.dart';
-import '../constant.dart';
-import '../models/money.dart';
-import 'new_transactions_screen.dart';
+// ignore_for_file: must_be_immutable
 
-// ignore: must_be_immutable
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:money_app/constant.dart';
+import 'package:money_app/main.dart';
+import 'package:money_app/models/money.dart';
+import 'package:money_app/screens/main_screen.dart';
+import 'package:money_app/screens/new_transactions_screen.dart';
+import 'package:money_app/utils/extension.dart';
+import 'package:searchbar_animation/searchbar_animation.dart';
+
 class HomeScreen extends StatefulWidget {
-  //
   const HomeScreen({Key? key}) : super(key: key);
 
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
   static List<Money> moneys = [];
+
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  bool isTyped = false;
+  final TextEditingController searchController = TextEditingController();
+  Box<Money> hiveBox = Hive.box<Money>('moneyBox');
+
+  @override
+  void initState() {
+    MyApp.getData();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
-    TextEditingController searchController = TextEditingController();
-    //
-    Box<Money> hiveBox = Hive.box<Money>('moneyBox');
-    //
-    double screenWidth = MediaQuery.of(context).size.width;
-    double screenHeight = MediaQuery.of(context).size.height;
-    //
-    return Scaffold(
-      backgroundColor: Colors.white,
-      floatingActionButton: fabWidget(),
-      body: SafeArea(
-        child: SizedBox(
-          width: screenWidth,
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        floatingActionButton: fabWidget(),
+        body: SizedBox(
+          width: double.infinity,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              headerWidget(hiveBox, searchController, screenHeight),
+              headerWidget(),
+              //const Expanded(child: EmptyWidget()),
               Expanded(
-                child: Container(
-                  margin: const EdgeInsets.only(left: 5.0, top: 20.0),
-                  child: HomeScreen.moneys.isEmpty
-                      ? const EmptyWidget()
-                      : ListView.builder(
-                          itemCount: HomeScreen.moneys.length,
-                          itemBuilder: (context, index) {
-                            return InkWell(
-                              onLongPress: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return AlertDialog(
-                                      title: const Text(
-                                        'آیا از حذف این تراکنش مطمئن هستید؟',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                      actionsAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                          },
-                                          child: const Text(
-                                            'خیر',
-                                            style:
-                                                TextStyle(color: Colors.black),
-                                          ),
-                                        ),
-                                        TextButton(
-                                          onPressed: () {
-                                            setState(() {
-                                              hiveBox.deleteAt(index);
-                                              Navigator.pop(context);
-                                              MyApp.refreshList();
-                                            });
-                                          },
-                                          child: const Text(
-                                            'بله',
-                                            style:
-                                                TextStyle(color: Colors.black),
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                );
-                              },
+                child: HomeScreen.moneys.isEmpty
+                    ? const EmptyWidget()
+                    : ListView.builder(
+                        itemCount: HomeScreen.moneys.length,
+                        itemBuilder: (context, index) {
+                          return GestureDetector(
+                              //* Edit
                               onTap: () {
                                 //
-                                NewTransactionScreen.isEdit = true;
-                                //
-                                NewTransactionScreen.id = 0;
-                                NewTransactionScreen.id =
-                                    HomeScreen.moneys[index].id;
-                                //
-                                NewTransactionScreen.descriptionController
-                                    .text = HomeScreen.moneys[index].title;
-                                //
-                                NewTransactionScreen.priceController.text =
-                                    HomeScreen.moneys[index].price;
-                                //
-                                NewTransactionScreen.groupValue =
-                                    HomeScreen.moneys[index].isReceived ? 1 : 2;
-                                //
-                                NewTransactionScreen.date =
+                                NewTransactionsScreen.date =
                                     HomeScreen.moneys[index].date;
                                 //
+                                NewTransactionsScreen.descriptionController
+                                    .text = HomeScreen.moneys[index].title;
+                                //
+                                NewTransactionsScreen.priceController.text =
+                                    HomeScreen.moneys[index].price;
+                                //
+                                NewTransactionsScreen.groupId =
+                                    HomeScreen.moneys[index].isReceived ? 1 : 2;
+                                //
+                                NewTransactionsScreen.isEditing = true;
+                                //
+                                NewTransactionsScreen.id =
+                                    HomeScreen.moneys[index].id;
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) =>
-                                        NewTransactionScreen(),
+                                        const NewTransactionsScreen(),
                                   ),
                                 ).then((value) {
-                                  setState(() {
-                                    MyApp.refreshList();
-                                  });
+                                  MyApp.getData();
+                                  setState(() {});
                                 });
-                                //
                               },
-                              child: ListTileWidget(
-                                screenWidth: screenWidth,
-                                screenHeight: screenHeight,
-                                index: index,
-                              ),
-                            );
-                          },
-                        ),
-                ),
-              ),
+                              //! Delete
+                              onLongPress: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text(
+                                      'آیا از حذف این آیتم مطمئن هستید؟',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                    actionsAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                        },
+                                        child: const Text('خیر',
+                                            style: TextStyle(
+                                                color: Colors.black87)),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          hiveBox.deleteAt(index);
+                                          MyApp.getData();
+                                          setState(() {});
+                                          Navigator.pop(context);
+                                        },
+                                        child: const Text(
+                                          'بله',
+                                          style:
+                                              TextStyle(color: Colors.black87),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                              child: MyListTileWidget(index: index));
+                        },
+                      ),
+              )
             ],
           ),
         ),
@@ -141,93 +127,76 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-//*
-  FloatingActionButton fabWidget() {
+  //! FAB Widget
+  Widget fabWidget() {
     return FloatingActionButton(
       backgroundColor: kPurpleColor,
       elevation: 0,
       onPressed: () {
-        NewTransactionScreen.id == 0;
-        //
-        NewTransactionScreen.isEdit = false;
-        //
-        NewTransactionScreen.descriptionController.text = '';
-        //
-        NewTransactionScreen.priceController.text = '';
-        //
-        NewTransactionScreen.groupValue = 0;
-        //
-        NewTransactionScreen.date = '';
-        //
+        NewTransactionsScreen.date = 'تاریخ';
+        NewTransactionsScreen.descriptionController.text = '';
+        NewTransactionsScreen.priceController.text = '';
+        NewTransactionsScreen.groupId = 0;
+        NewTransactionsScreen.isEditing = false;
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => NewTransactionScreen(),
+            builder: (context) => const NewTransactionsScreen(),
           ),
         ).then((value) {
-          setState(() {
-            MyApp.refreshList();
-          });
+          MyApp.getData();
+          setState(() {});
         });
-        //
       },
       child: const Icon(Icons.add),
     );
   }
 
-//*
-  Container headerWidget(Box<Money> hiveBox,
-      TextEditingController searchController, double screenHeight) {
-    return Container(
-      margin: const EdgeInsets.only(right: 20.0, top: 20.0, left: 5.0),
+  //! Header Widget
+  Widget headerWidget() {
+    return Padding(
+      padding: const EdgeInsets.only(right: 20, top: 20, left: 5),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          isTyped == false
-              ? Expanded(
-                  child: SearchBarAnimation(
-                    hintText: '...جستجو کنید',
-                    buttonElevation: 0,
-                    buttonShadowColour: Colors.black26,
-                    isOriginalAnimation: false,
-                    buttonBorderColour: Colors.black26,
-                    buttonIcon: Icons.search,
-                    onFieldSubmitted: (String text) {
-                      List<Money> result = hiveBox.values
-                          .where(
-                            (value) =>
-                                value.title.contains(text) ||
-                                value.date.contains(text),
-                          )
-                          .toList();
-                      //
-                      HomeScreen.moneys.clear();
-                      //
-                      setState(
-                        () {
-                          for (var value in result) {
-                            HomeScreen.moneys.add(value);
-                          }
-                          isTyped = true;
-                        },
-                      );
-                    },
-                    textEditingController: searchController,
-                  ),
-                )
-              : IconButton(
-                  onPressed: () {
-                    setState(() {
-                      MyApp.refreshList();
-                      isTyped = false;
-                    });
-                  },
-                  icon: const Icon(Icons.refresh),
-                ),
-          const SizedBox(width: 10.0),
+          Expanded(
+            child: SearchBarAnimation(
+              hintText: '...جستجو کنید',
+              buttonElevation: 0,
+              buttonShadowColour: Colors.black26,
+              isOriginalAnimation: false,
+              buttonBorderColour: Colors.black26,
+              buttonIcon: Icons.search,
+              onCollapseComplete: () {
+                MyApp.getData();
+                searchController.text = '';
+                setState(() {});
+              },
+              onFieldSubmitted: (String text) {
+                List<Money> result = hiveBox.values
+                    .where(
+                      (value) =>
+                          value.title.contains(text) ||
+                          value.date.contains(text),
+                    )
+                    .toList();
+                HomeScreen.moneys.clear();
+
+                setState(() {
+                  for (var value in result) {
+                    HomeScreen.moneys.add(value);
+                  }
+                });
+              },
+              textEditingController: searchController,
+            ),
+          ),
+          const SizedBox(width: 10),
           Text(
             'تراکنش ها',
-            style: TextStyle(fontSize: screenHeight * 0.025),
+            style: TextStyle(
+                fontSize: ScreenSize(context).screenWidth < 1004
+                    ? 18
+                    : ScreenSize(context).screenWidth * 0.015),
           ),
         ],
       ),
@@ -235,25 +204,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-//*
-class ListTileWidget extends StatelessWidget {
-  const ListTileWidget({
-    Key? key,
-    required this.screenWidth,
-    required this.screenHeight,
-    required this.index,
-  }) : super(key: key);
-
-  final double screenWidth;
-  final double screenHeight;
+class MyListTileWidget extends StatelessWidget {
   final int index;
-
+  const MyListTileWidget({Key? key, required this.index}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.all(10.0),
+    return Padding(
+      padding: const EdgeInsets.all(15.0),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: 50,
@@ -271,67 +229,70 @@ class ListTileWidget extends StatelessWidget {
               ),
             ),
           ),
-          Container(
-            margin: const EdgeInsets.only(top: 10.0, left: 15.0),
+          Padding(
+            padding: const EdgeInsets.only(left: 15.0),
             child: Text(
               HomeScreen.moneys[index].title,
+              style: TextStyle(
+                  fontSize: ScreenSize(context).screenWidth < 1004
+                      ? 14
+                      : ScreenSize(context).screenWidth * 0.015),
             ),
           ),
           const Spacer(),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Container(
-                margin: const EdgeInsets.only(top: 5.0, right: 5.0),
-                child: Row(
-                  children: [
-                    Text(
-                      'تومان',
-                      style: TextStyle(
-                        fontSize: 18.0,
-                        color: HomeScreen.moneys[index].isReceived
-                            ? kGreenColor
-                            : kRedColor,
-                      ),
+              Row(
+                children: [
+                  Text(
+                    'تومان',
+                    style: TextStyle(
+                      fontSize: ScreenSize(context).screenWidth < 1004
+                          ? 14
+                          : ScreenSize(context).screenWidth * 0.015,
+                      color: kRedColor,
                     ),
-                    Text(
-                      HomeScreen.moneys[index].price,
-                      style: TextStyle(
-                        fontSize: 18.0,
-                        color: HomeScreen.moneys[index].isReceived
-                            ? kGreenColor
-                            : kRedColor,
-                      ),
-                    ),
-                  ],
+                  ),
+                  Text(
+                    HomeScreen.moneys[index].price,
+                    style: TextStyle(
+                        fontSize: ScreenSize(context).screenWidth < 1004
+                            ? 14
+                            : ScreenSize(context).screenWidth * 0.015,
+                        color: kRedColor),
+                  ),
+                ],
+              ),
+              Text(
+                HomeScreen.moneys[index].date,
+                style: TextStyle(
+                  fontSize: ScreenSize(context).screenWidth < 1004
+                      ? 12
+                      : ScreenSize(context).screenWidth * 0.01,
                 ),
-              ),
-              Container(
-                margin: const EdgeInsets.only(top: 5.0, right: 5.0),
-                child: Text(HomeScreen.moneys[index].date),
-              ),
+              )
             ],
-          )
+          ),
         ],
       ),
     );
   }
 }
 
-//*
+//! Empty Widget
 class EmptyWidget extends StatelessWidget {
-  const EmptyWidget({
-    Key? key,
-  }) : super(key: key);
+  const EmptyWidget({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         const Spacer(),
-        Container(
-          alignment: Alignment.center,
-          child: SvgPicture.asset('assets/images/empty.svg'),
+        SvgPicture.asset(
+          'assets/images/empty.svg',
+          height: 150,
+          width: 150,
         ),
         const SizedBox(height: 10),
         const Text(' ! تراکنشی موجود نیست'),

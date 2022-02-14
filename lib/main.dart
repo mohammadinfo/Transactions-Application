@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:money_app/models/money.dart';
-import 'package:money_app/screens/main_screen.dart';
-
+import 'models/money.dart';
 import 'screens/home_screen.dart';
+import 'screens/main_screen.dart';
 
 void main() async {
   await Hive.initFlutter();
@@ -16,35 +14,21 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
-  @override
-  Widget build(BuildContext context) {
-    //
-    changeStatusBarColor();
-    //
-    refreshList();
-    //
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Money App',
-      theme: ThemeData(fontFamily: 'iransans'),
-      home: const MainScreen(),
-    );
-  }
-
-  static void changeStatusBarColor() {
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.white,
-        statusBarIconBrightness: Brightness.dark,
-      ),
-    );
-  }
-
-  static void refreshList() {
+  static void getData() {
     HomeScreen.moneys.clear();
     Box<Money> hiveBox = Hive.box<Money>('moneyBox');
     for (var value in hiveBox.values) {
       HomeScreen.moneys.add(value);
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      theme: ThemeData(fontFamily: 'iransans'),
+      debugShowCheckedModeBanner: false,
+      title: 'اپلیکیشن مدیریت مالی',
+      home: const MainScreen(),
+    );
   }
 }

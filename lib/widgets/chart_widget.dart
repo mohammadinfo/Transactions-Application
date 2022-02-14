@@ -1,14 +1,9 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:money_app/utils/calculate.dart';
 
 class BarChartWidget extends StatelessWidget {
-  final double pYear;
-  final double dYear;
-  const BarChartWidget({
-    Key? key,
-    required this.pYear,
-    required this.dYear,
-  }) : super(key: key);
+  const BarChartWidget({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +14,6 @@ class BarChartWidget extends StatelessWidget {
         borderData: borderData,
         barGroups: barGroups,
         alignment: BarChartAlignment.spaceAround,
-        groupsSpace: 0,
       ),
     );
   }
@@ -56,7 +50,7 @@ class BarChartWidget extends StatelessWidget {
             fontWeight: FontWeight.bold,
             fontSize: 14,
           ),
-          margin: 10,
+          margin: 20,
           getTitles: (double value) {
             switch (value.toInt()) {
               case 0:
@@ -82,7 +76,8 @@ class BarChartWidget extends StatelessWidget {
           x: 0,
           barRods: [
             BarChartRodData(
-                y: pYear, colors: [Colors.lightBlueAccent, Colors.greenAccent])
+                y: Calculate.pYear(),
+                colors: [Colors.lightBlueAccent, Colors.greenAccent])
           ],
           showingTooltipIndicators: [0],
         ),
@@ -90,7 +85,8 @@ class BarChartWidget extends StatelessWidget {
           x: 1,
           barRods: [
             BarChartRodData(
-                y: dYear, colors: [Colors.lightBlueAccent, Colors.greenAccent])
+                y: Calculate.dYear(),
+                colors: [Colors.lightBlueAccent, Colors.greenAccent])
           ],
           showingTooltipIndicators: [0],
         ),
